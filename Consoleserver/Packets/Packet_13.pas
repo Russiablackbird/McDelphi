@@ -7,7 +7,8 @@ uses
   IdTCPServer,
   IdContext,
   IdGlobal,
-  PlayerHandler;
+  PlayerHandler,
+  System.RegularExpressions;
 
 type
   Packet13 = class(TObject) // Message
@@ -23,31 +24,71 @@ var
   Msg, Msg1, Msg2: string;
   Player: PlayerStruct;
   NickName: string;
+  m: TMatch;
 begin
+
   with AContext.Connection do
   begin
+    While not IOHandler.InputBuffer.Size >= 65 do
+    begin
 
+    end;
     IOHandler.ReadByte;
     Msg := IOHandler.ReadString(64, nil);
     NickName := PlayersStack.Items[AContext].UserName.Replace(' ', '');
     NickName := '&2[' + NickName + ']: &7';
-    Msg1 := Copy(Msg, 0, 64 - length(NickName));
-    Msg2 := Copy(Msg, length(Msg1), 64);
-    Msg1 := Concat(NickName, Msg1);
-    Msg2 := Concat('&7', Msg2);
-    Msg2 := Msg2 + stringofchar(' ', 64 - length(Msg2));
 
-    for Player in PlayersStack.Values do
+    m := TRegEx.Match(Msg, '[^\s]+');
+
+    while m.Success do
     begin
-      if Player.Con <> AContext then
-      begin
-        Packet13.Write(Player.Con, Msg1);
-        Packet13.Write(Player.Con, Msg2);
-      end;
+      Msg1 := Msg1 + ' ' + m.Value;
+      m := m.NextMatch;
     end;
 
-    Packet13.Write(AContext, Msg1);
-    Packet13.Write(AContext, Msg2);
+    Msg1 := Concat(NickName, Msg1);
+
+    if Length(Msg1) > 64 then
+    begin
+      Msg2 := Copy(Msg1, 65, Length(Msg1) - 63);
+
+      // Msg1 := Msg1 + stringofchar(' ', 64 - Length(Msg1));
+      Msg1 := Msg1.Replace('%', '&');
+      Msg2 := Concat('> ', '&7', Msg2);
+      Msg2 := Msg2 + stringofchar(' ', 64 - Length(Msg2));
+      Msg2 := Msg2.Replace('%', '&');
+      Delete(Msg1, 65, MaxInt);
+      Delete(Msg2, 65, MaxInt);
+
+      for Player in PlayersStack.Values do
+      begin
+        if Player.Con <> AContext then
+        begin
+          Packet13.Write(Player.Con, Msg1);
+          Packet13.Write(Player.Con, Msg2);
+        end;
+      end;
+
+      Packet13.Write(AContext, Msg1);
+      Packet13.Write(AContext, Msg2);
+    end
+
+    else
+
+    begin
+      Msg1 := Msg1 + stringofchar(' ', 64 - Length(Msg1));
+      Msg1 := Msg1.Replace('%', '&');
+      Delete(Msg1, 65, MaxInt);
+
+      for Player in PlayersStack.Values do
+      begin
+        if Player.Con <> AContext then
+        begin
+          Packet13.Write(Player.Con, Msg1);
+        end;
+      end;
+      Packet13.Write(AContext, Msg1);
+    end;
   end;
 end;
 

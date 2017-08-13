@@ -34,10 +34,12 @@ var
   Data: TIdBytes;
   GZ: TMemoryStream;
   Point: Integer;
+
 begin
   GZ := TMemoryStream.Create;
   Point := 0;
-  GZ := WorldMgr.GetGZipMap;
+  GZ.Position := 0;
+  GZ.WriteData(WorldMgr.GetGZipMap, Length(CompressMap));
   GZ.Position := 0;
 
   while (GZ.Size > Point) do
@@ -59,7 +61,8 @@ begin
     Point := Point + 1024;
   end;
   GZ.Clear;
-
+  GZ.Free;
+  SetLength(CompressMap, 0);
 {$REGION 'MyRegion'}
   // with AContext.Connection do
   // begin
