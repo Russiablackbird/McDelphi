@@ -45,97 +45,51 @@ begin
   end
   else
   begin
-
-    for Player in PlayersStack.Values do
+    with AContext.Connection do
     begin
-
-      if Player.Con = AContext then
+      for Player in PlayersStack.Values do
       begin
-        case CommandID of
-          1:
+
+        if Player.Con = AContext then
+        begin
+          case CommandID of
+            5:
+              begin
+                // While not IOHandler.InputBuffer.Size >= 8 do
+                begin
+
+                end;
+                Packet5.Read(AContext); // Set block
+              end;
+            8:
+              begin
+                // While not IOHandler.InputBuffer.Size >= 9 do
+                begin
+
+                end;
+                Packet8.Read(AContext); // Position and orientation
+              end;
+            13:
+              begin
+                // While not IOHandler.InputBuffer.Size >= 65 do
+                begin
+
+                end;
+                Packet13.Read(AContext); // read message
+              end;
+          else
             begin
               AContext.Connection.IOHandler.InputBuffer.Clear;
               AContext.Connection.Disconnect;
             end;
-          2:
-            begin
-              AContext.Connection.IOHandler.InputBuffer.Clear;
-              AContext.Connection.Disconnect;
-            end;
-          3:
-            begin
-              AContext.Connection.IOHandler.InputBuffer.Clear;
-              AContext.Connection.Disconnect;
-            end;
-          4:
-            begin
-              AContext.Connection.IOHandler.InputBuffer.Clear;
-              AContext.Connection.Disconnect;
-            end;
-          5:
-            begin
-              Packet5.Read(AContext); // Set block
-            end;
-          6:
-            begin
-              AContext.Connection.IOHandler.InputBuffer.Clear;
-              AContext.Connection.Disconnect;
-            end;
-          7:
-            begin
-              AContext.Connection.IOHandler.InputBuffer.Clear;
-              AContext.Connection.Disconnect;
-            end;
-          8:
-            begin
-              Packet8.Read(AContext); // Position and orientation
-            end;
-          9:
-            begin
-              AContext.Connection.IOHandler.InputBuffer.Clear;
-              AContext.Connection.Disconnect;
-            end;
-          10:
-            begin
-              AContext.Connection.IOHandler.InputBuffer.Clear;
-              AContext.Connection.Disconnect;
-            end;
-          11:
-            begin
-              AContext.Connection.IOHandler.InputBuffer.Clear;
-              AContext.Connection.Disconnect;
-            end;
-          12:
-            begin
-              AContext.Connection.IOHandler.InputBuffer.Clear;
-              AContext.Connection.Disconnect;
-            end;
-          13:
-            begin
-              Packet13.Read(AContext); // чтение сообщения от клиента
-            end;
-          14:
-            begin
-              AContext.Connection.IOHandler.InputBuffer.Clear;
-              AContext.Connection.Disconnect;
-            end;
-          15:
-            begin
-              AContext.Connection.IOHandler.InputBuffer.Clear;
-              AContext.Connection.Disconnect;
-            end;
-        else
-          begin
-            AContext.Connection.IOHandler.InputBuffer.Clear;
-            AContext.Connection.Disconnect;
           end;
         end;
+
       end;
 
     end;
 
   end;
-
 end;
 
 end.

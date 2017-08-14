@@ -6,6 +6,8 @@ uses
   System.SysUtils, IdContext,
   System.Generics.Defaults,
   System.Generics.Collections,
+  IdHashMessageDigest,
+  IdGlobal,
   Config;
 
 type
@@ -53,7 +55,7 @@ uses
   Packet_8, // Position and Orientation
   Packet_12, // Despawn Player
   Packet_13, // Message
-  Packet_14; //
+  Packet_14; // Kicked
 
 class procedure PlayerManager.Connect(AContext: TIdContext;
   SelfPlayer: PlayerStruct);
@@ -61,7 +63,7 @@ var
   Player: PlayerStruct;
   Msg: string;
 begin
-  Packet0.Write(AContext, 7, Cgf.ServerName, Cgf.ServerMOTD, 64);
+  Packet0.Write(AContext, 7, Cgf.ServerName, Cgf.ServerMOTD, 100);
   Packet2.Write(AContext);
   Packet3.Write(AContext);
 
@@ -127,6 +129,8 @@ class procedure PlayerManager.PlayerIdent(Vers: Byte; UserName: String;
   VerKey: String; AContext: TIdContext);
 var
   Player: PlayerStruct;
+  MD5Mgr: TIdHashMessageDigest;
+  MD5: string;
 begin
   Player.UserName := UserName;
   Player.VeryfyKey := VerKey;
@@ -135,7 +139,18 @@ begin
   Player.X := 3000;
   Player.Y := 3000;
   Player.Z := 3000;
-  PlayerManager.Connect(AContext, Player);
+
+  MD5Mgr := TIdHashMessageDigest5.Create;
+  MD5 := MD5Mgr.HashStringAsHex(Cgf.ServerSalt + UserName.Replace(' ', ''));
+  if LowerCase(MD5) = Player.VeryfyKey.Replace(' ', '') then
+  begin
+    PlayerManager.Connect(AContext, Player);
+  end
+  else
+  begin
+    Packet14.Write(AContext, 'Bad connect session');
+  end;
+  MD5Mgr.Free;
 end;
 
 class procedure PlayerManager.Init;

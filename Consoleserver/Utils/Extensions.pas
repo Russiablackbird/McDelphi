@@ -31,7 +31,6 @@ begin
   ST.Read(Z, 2);
   vector.Z := BitConverter.ToInt16R(Z);
   Result := vector;
-
 end;
 
 class function Ext.Index(X, Y, Z, length, width: SmallInt): Integer;

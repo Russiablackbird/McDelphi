@@ -29,10 +29,6 @@ begin
 
   with AContext.Connection do
   begin
-    While not IOHandler.InputBuffer.Size >= 65 do
-    begin
-
-    end;
     IOHandler.ReadByte;
     Msg := IOHandler.ReadString(64, nil);
     NickName := PlayersStack.Items[AContext].UserName.Replace(' ', '');
@@ -51,8 +47,6 @@ begin
     if Length(Msg1) > 64 then
     begin
       Msg2 := Copy(Msg1, 65, Length(Msg1) - 63);
-
-      // Msg1 := Msg1 + stringofchar(' ', 64 - Length(Msg1));
       Msg1 := Msg1.Replace('%', '&');
       Msg2 := Concat('> ', '&7', Msg2);
       Msg2 := Msg2 + stringofchar(' ', 64 - Length(Msg2));

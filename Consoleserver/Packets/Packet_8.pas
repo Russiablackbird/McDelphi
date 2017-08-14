@@ -26,10 +26,6 @@ var
 begin
   with AContext.Connection do
   begin
-    While not IOHandler.InputBuffer.Size >= 9 do
-    begin
-
-    end;
     IOHandler.ReadByte;
     Player := PlayersStack.Items[AContext];
     Player.X := IOHandler.ReadInt16;

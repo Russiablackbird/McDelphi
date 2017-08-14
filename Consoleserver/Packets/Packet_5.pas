@@ -28,10 +28,6 @@ var
 begin
   with AContext.Connection do
   begin
-    While not IOHandler.InputBuffer.Size >= 8 do
-    begin
-
-    end;
     X := IOHandler.ReadInt16;
     Y := IOHandler.ReadInt16;
     Z := IOHandler.ReadInt16;
@@ -40,14 +36,12 @@ begin
 
     if Mode = 0 then
     begin
-      MapArray[16 + Ext.Index(X, Y, Z, GLWorld.MapSize.X,
-        GLWorld.MapSize.Z)] := 0;
+      MapArray[Ext.Index(X, Y, Z, GLWorld.MapSize.X, GLWorld.MapSize.Z)] := 0;
       Packet5.Write(AContext, X, Y, Z, 0);
     end
     else
     begin
-      MapArray[16 + Ext.Index(X, Y, Z, GLWorld.MapSize.X,
-        GLWorld.MapSize.Z)] := BId;
+      MapArray[Ext.Index(X, Y, Z, GLWorld.MapSize.X, GLWorld.MapSize.Z)] := BId;
       Packet5.Write(AContext, X, Y, Z, BId);
     end;
 

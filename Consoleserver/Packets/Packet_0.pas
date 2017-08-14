@@ -30,10 +30,6 @@ var
 begin
   With AContext.Connection do
   begin
-    While not IOHandler.InputBuffer.Size >= 130 do // 130 ровно
-    begin
-
-    end;
     Vers := IOHandler.ReadByte;
     UserName := IOHandler.ReadString(64, nil);
     VerKey := IOHandler.ReadString(64, nil);
@@ -53,7 +49,6 @@ begin
     IOHandler.Write(SMOTD);
     IOHandler.Write(UserType);
   end;
-
 end;
 
 end.

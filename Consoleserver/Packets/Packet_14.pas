@@ -30,6 +30,7 @@ begin
     IOHandler.Write(14);
     Reasons := Reasons + stringofchar(' ', 64 - Length(Reasons));
     IOHandler.Write(Reasons);
+    Disconnect;
   end;
 end;
 
