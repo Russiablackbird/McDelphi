@@ -28,21 +28,22 @@ uses
   Packet_8 in 'Packets\Packet_8.pas',
   Packet_12 in 'Packets\Packet_12.pas',
   Packet_13 in 'Packets\Packet_13.pas',
-  Packet_14 in 'Packets\Packet_14.pas';
+  Packet_14 in 'Packets\Packet_14.pas',
+  Noise in 'Utils\Noise.pas';
 
 var
   ServerTrigger: Boolean = True;
   comm: string;
 
 begin
+  ReportMemoryLeaksOnShutdown := True;
   try
     PlayerManager.init;
     LoadCgf;
-    WorldMgr.Load;
+    WorldMgr.init;
     HeartBeat.Create;
     Server.Srv.OnCreate(Config.Cgf.ServerPort, Config.Cgf.Max_Players, 5000);
     PrintInfo('Сервер запущен');
-    ReportMemoryLeaksOnShutdown := True;
   except
     on E: Exception do
       Writeln(E.ClassName, ': ', E.Message);

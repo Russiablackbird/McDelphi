@@ -3,7 +3,8 @@ unit World;
 interface
 
 uses
-  System.SysUtils, System.Classes, IdGlobal, ZLibExGZ, Extensions;
+  System.SysUtils, System.Classes, System.Math, IdGlobal, ZLibExGZ, Extensions,
+  Noise;
 
 type
   GlobalWorld = record
@@ -14,9 +15,12 @@ type
 type
   WorldMgr = class(TObject)
   public
+    class procedure Init;
     class procedure Load;
     class function GetGZipMap: TIdBytes;
-    class procedure Save();
+    class procedure Save;
+    class procedure Generate;
+    class function GetTile(x, y, z, grass: Integer): Byte;
   end;
 
 var
@@ -24,8 +28,23 @@ var
   ZipMap, UnZipMap, SaveMap: TMemoryStream;
   MapArray, CompressMap: TIdBytes;
   MapSize, CompMapSize: Integer;
+  seed: _Noise;
 
 implementation
+
+class procedure WorldMgr.Init;
+begin
+  if FileExists('maps/world.btm') then
+  begin
+     WorldMgr.Load;
+    //  WorldMgr.Generate;
+  end
+  else
+  begin
+    WorldMgr.Generate;
+  end;
+
+end;
 
 class procedure WorldMgr.Load;
 begin
@@ -53,16 +72,16 @@ class function WorldMgr.GetGZipMap: TIdBytes;
 var
   Map: TMemoryStream;
   data: array [0 .. 3] of Byte;
-  X, Y, Z: SmallInt;
+  x, y, z: SmallInt;
 begin
   Map := TMemoryStream.Create;
   Map.Position := 0;
-  X := GLWorld.MapSize.X;
-  Y := GLWorld.MapSize.Y;
-  Z := GLWorld.MapSize.Z;
-  data[0] := (((MapSize) and (X * Y * Z)) shr 24);
-  data[1] := (((MapSize) and (X * Y * Z)) shr 16);
-  data[2] := (((MapSize) and (X * Y * Z)) shr 8);
+  x := GLWorld.MapSize.x;
+  y := GLWorld.MapSize.y;
+  z := GLWorld.MapSize.z;
+  data[0] := (((MapSize) and (x * y * z)) shr 24);
+  data[1] := (((MapSize) and (x * y * z)) shr 16);
+  data[2] := (((MapSize) and (x * y * z)) shr 8);
   data[3] := (((MapSize) and (0)));
 
   Map.WriteData(data); // записать в поток
@@ -83,15 +102,14 @@ var
   CompressStream: TMemoryStream;
 begin
   CompressStream := TMemoryStream.Create;
-  SaveMap.WriteData(Swap(GLWorld.MapSize.X));
-  SaveMap.WriteData(Swap(GLWorld.MapSize.Y));
-  SaveMap.WriteData(Swap(GLWorld.MapSize.Z));
-  SaveMap.WriteData(Swap(GLWorld.SpawnPos.X));
-  SaveMap.WriteData(Swap(GLWorld.SpawnPos.X));
-  SaveMap.WriteData(Swap(GLWorld.SpawnPos.X));
-  SaveMap.WriteData(GLWorld.MapSize.X * GLWorld.MapSize.Y * GLWorld.MapSize.Z);
-  SaveMap.WriteData((Copy(MapArray, 16, UnZipMap.Size - 16)),
-    UnZipMap.Size - 16);
+  SaveMap.WriteData(Swap(GLWorld.MapSize.x));
+  SaveMap.WriteData(Swap(GLWorld.MapSize.y));
+  SaveMap.WriteData(Swap(GLWorld.MapSize.z));
+  SaveMap.WriteData(Swap(GLWorld.SpawnPos.x));
+  SaveMap.WriteData(Swap(GLWorld.SpawnPos.x));
+  SaveMap.WriteData(Swap(GLWorld.SpawnPos.x));
+  SaveMap.WriteData(GLWorld.MapSize.x * GLWorld.MapSize.y * GLWorld.MapSize.z);
+  SaveMap.WriteData(MapArray, Length(MapArray));
   SaveMap.Position := 0;
   CompressStream.Position := 0;
   GZCompressStream(SaveMap, CompressStream);
@@ -100,6 +118,118 @@ begin
   SaveMap.Position := 0;
   CompressStream.Free;
   Writeln('Save done');
+end;
+
+class procedure WorldMgr.Generate;
+var
+  seed: _Noise;
+  x, y, z: Integer;
+  grass: Word;
+begin
+
+  GLWorld.MapSize.x := 256;
+  GLWorld.MapSize.y := 256;
+  GLWorld.MapSize.z := 256;
+  MapSize := GLWorld.MapSize.x * GLWorld.MapSize.y * GLWorld.MapSize.z;
+  ZipMap := TMemoryStream.Create;
+  seed := Noise._Noise.Create;
+  seed.Noise(RandomRange(200, MaxInt), GLWorld.MapSize.x, GLWorld.MapSize.z);
+  SetLength(MapArray,GLWorld.MapSize.x * GLWorld.MapSize.y *GLWorld.MapSize.z);
+
+{$REGION 'MAP'}
+  x := 0;
+  y := 0;
+  z := 0;
+
+  while (x < GLWorld.MapSize.x) do
+  begin
+    z := 0;
+    while (z < GLWorld.MapSize.z) do
+    begin
+      grass := Trunc(seed.GNoise(x, 0, z, 3, 1, 0.01) * 30) + 64;
+      y := 0;
+      while (y < GLWorld.MapSize.y) do
+      begin
+        MapArray[Ext.Index(x, y, z, 256, 256)] := GetTile(x, y, z, grass);
+        Inc(y);
+      end;
+      Inc(z);
+    end;
+
+    Inc(x);
+  end;
+{$ENDREGION}
+
+Writeln('Generation finish');
+end;
+
+class function WorldMgr.GetTile(x: Integer; y: Integer; z: Integer;
+  grass: Integer): Byte;
+var
+  ret: Byte;
+  OreNoise, OreLevel, OreNum: Double;
+begin
+  ret := 0;
+
+  if (y > grass) then
+  begin
+    Result := ret;
+    Exit;
+  end;
+
+  if (y = 0) then
+  begin
+    Result := 7;
+    Exit;
+  end;
+
+  if (y <= grass) then
+  begin
+
+    if (seed.GNoise(x, y, z) > 0.23 + (IfThen(y > 32, (y - 32) * 0.01, 0))) then
+    begin
+      ret := 0;
+    end
+    else
+    begin
+      OreNoise := seed.GNoise(x, y, z, 5, 1, 0.07, 0.7);
+      OreLevel := -0.5 - ((IfThen(y > 32, (y - 32) * 0.01, 0)));
+      OreNum := (OreNoise - OreLevel) * -10;
+
+      if ((OreNum >= 3) or (OreNum >= 2) or (OreNum >= 1) or (OreNum >= 0)) then
+      begin
+        ret := 15;
+      end
+      else
+      begin
+
+        if (seed.GNoise(x, y, z, 6, 1, 0.07, 0.7) < 0.005 -
+          (IfThen(y > 32, (y - 32) * 0.01, 0))) then
+        begin
+          ret := 1;
+        end
+
+        else
+
+        begin
+
+          if (y = grass) then
+          begin
+            ret := 2;
+          end
+          else
+          begin
+            ret := 3;
+          end;
+
+        end;
+
+      end;
+
+    end;
+
+  end;
+  Result := ret;
 end;
 
 end.

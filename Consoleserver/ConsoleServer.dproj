@@ -173,6 +173,7 @@
         <DCCReference Include="Packets\Packet_12.pas"/>
         <DCCReference Include="Packets\Packet_13.pas"/>
         <DCCReference Include="Packets\Packet_14.pas"/>
+        <DCCReference Include="Utils\Noise.pas"/>
         <BuildConfiguration Include="Release">
             <Key>Cfg_2</Key>
             <CfgParent>Base</CfgParent>

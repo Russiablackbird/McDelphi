@@ -9,7 +9,9 @@ uses
   IdGlobal,
   PlayerHandler,
   System.Generics.Defaults,
-  System.Generics.Collections;
+  System.Generics.Collections,
+  Packet_14;
+
 
 type
   Packet0 = class(TObject)
@@ -27,14 +29,23 @@ var
   Vers: Byte;
   UserName: String;
   VerKey: String;
+  Unused: Byte;
 begin
   With AContext.Connection do
   begin
     Vers := IOHandler.ReadByte;
     UserName := IOHandler.ReadString(64, nil);
     VerKey := IOHandler.ReadString(64, nil);
-    IOHandler.ReadByte;
-    PlayerManager.PlayerIdent(Vers, UserName, VerKey, AContext);
+    Unused := IOHandler.ReadByte;
+
+   // if Unused = 66 then
+   // begin
+     //   Packet14.Write(AContext,'Use classical or classical+hax');
+  //  end
+   // else
+   // begin
+       PlayerManager.PlayerIdent(Vers, UserName, VerKey, AContext);
+   // end;
   end;
 end;
 

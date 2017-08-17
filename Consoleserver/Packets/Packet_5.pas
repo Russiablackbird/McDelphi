@@ -69,6 +69,7 @@ class procedure Packet5.Write(AContext: TIdContext; X, Y, Z: SmallInt;
 begin
   with AContext.Connection do
   begin
+    CheckForGracefulDisconnect(True);
     IOHandler.Write(6);
     IOHandler.Write(X);
     IOHandler.Write(Y);

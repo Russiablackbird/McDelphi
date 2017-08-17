@@ -22,6 +22,7 @@ implementation
 class procedure Packet13.Read(AContext: TIdContext);
 var
   Msg, Msg1, Msg2: string;
+  Unused: Byte;
   Player: PlayerStruct;
   NickName: string;
   m: TMatch;
@@ -29,7 +30,7 @@ begin
 
   with AContext.Connection do
   begin
-    IOHandler.ReadByte;
+    Unused := IOHandler.ReadByte;
     Msg := IOHandler.ReadString(64, nil);
     NickName := PlayersStack.Items[AContext].UserName.Replace(' ', '');
     NickName := '&2[' + NickName + ']: &7';
@@ -65,6 +66,7 @@ begin
 
       Packet13.Write(AContext, Msg1);
       Packet13.Write(AContext, Msg2);
+
     end
 
     else
@@ -90,6 +92,7 @@ class procedure Packet13.Write(AContext: TIdContext; Msg: string);
 begin
   with AContext.Connection do
   begin
+    CheckForGracefulDisconnect(True);
     IOHandler.Write(13);
     IOHandler.Write(0);
     IOHandler.Write(Msg);

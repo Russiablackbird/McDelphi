@@ -49,32 +49,19 @@ begin
     begin
       for Player in PlayersStack.Values do
       begin
-
         if Player.Con = AContext then
         begin
           case CommandID of
             5:
               begin
-                // While not IOHandler.InputBuffer.Size >= 8 do
-                begin
-
-                end;
                 Packet5.Read(AContext); // Set block
               end;
             8:
               begin
-                // While not IOHandler.InputBuffer.Size >= 9 do
-                begin
-
-                end;
                 Packet8.Read(AContext); // Position and orientation
               end;
             13:
               begin
-                // While not IOHandler.InputBuffer.Size >= 65 do
-                begin
-
-                end;
                 Packet13.Read(AContext); // read message
               end;
           else
@@ -83,6 +70,7 @@ begin
               AContext.Connection.Disconnect;
             end;
           end;
+          Packet1.Write(AContext);
         end;
 
       end;

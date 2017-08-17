@@ -17,6 +17,7 @@ type
   Srv = class(TObject)
   public
     TCPServer: TIdTCPServer;
+
     constructor OnCreate(Port, MaxClient, TimeOut: Word);
     destructor OnClose();
     procedure ServerExecute(AContext: TIdContext);
@@ -31,19 +32,17 @@ implementation
 
 procedure Srv.ServerException(AContext: TIdContext; AException: Exception);
 begin
-  // Writeln('Error: ' + AException.Message);
-  // AContext.Connection.Disconnect;
+  Writeln('Error: ' + AException.Message);
 end;
 
 procedure Srv.ServerExecute(AContext: TIdContext);
 begin
   PacketHandler.PacketManager.PacketInput(AContext);
-  // Writeln(AContext.Connection.IOHandler.ReadLn(nil));
 end;
 
 procedure Srv.ServerConnect(AContext: TIdContext);
 begin
-  // Writeln('К нам подключились: ' + IntToStr(integer(AContext)));
+
 end;
 
 procedure Srv.ServerDisconnect(AContext: TIdContext);

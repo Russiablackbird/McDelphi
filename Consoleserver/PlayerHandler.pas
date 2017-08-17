@@ -63,18 +63,29 @@ var
   Player: PlayerStruct;
   Msg: string;
 begin
-  Packet0.Write(AContext, 7, Cgf.ServerName, Cgf.ServerMOTD, 100);
+
+ if PlayersStack.ContainsKey(AContext) = True then
+  begin
+    Writeln('CRITICAL ERROR');
+  end;
+
+
+
+  Packet0.Write(AContext, 7, Cgf.ServerName, Cgf.ServerMOTD, 0); // 100 is op
   Packet2.Write(AContext);
   Packet3.Write(AContext);
 
   with AContext.Connection do
   begin
     Packet4.Write(AContext);
-    PlayersStack.Add(AContext, SelfPlayer);
+    PlayersStack.AddOrSetValue(AContext, SelfPlayer);
 
 {$REGION 'Self Spawn'}
     Packet7.Write(AContext, 255, SelfPlayer.UserName, SelfPlayer.X,
       SelfPlayer.Y, SelfPlayer.Z, SelfPlayer.Yaw, SelfPlayer.Pitch);
+
+  PlayersStack.AddOrSetValue(AContext, SelfPlayer);
+
 {$ENDREGION}
 {$REGION 'Message Joined'}
     Msg := '&2+ &6' + SelfPlayer.UserName.Replace(' ', '') +

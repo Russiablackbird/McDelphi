@@ -23,10 +23,12 @@ implementation
 class procedure Packet8.Read(AContext: TIdContext);
 var
   Player: PlayerStruct;
+  Unused: Byte;
 begin
+
   with AContext.Connection do
   begin
-    IOHandler.ReadByte;
+    Unused := IOHandler.ReadByte;
     Player := PlayersStack.Items[AContext];
     Player.X := IOHandler.ReadInt16;
     Player.Y := IOHandler.ReadInt16;
@@ -67,6 +69,7 @@ begin
 
   with AContext.Connection do
   begin
+    CheckForGracefulDisconnect(True);
     IOHandler.Write(8);
     IOHandler.Write(PID);
     IOHandler.Write(X);

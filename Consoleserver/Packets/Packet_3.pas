@@ -14,7 +14,6 @@ uses
 type
   Packet3 = class(TObject) // Level Data Chunk
   public
-    class procedure Read(AContext: TIdContext);
     class procedure Write(AContext: TIdContext); overload;
   private
     class procedure Write(AContext: TIdContext; ChunkSize: SmallInt;
@@ -22,11 +21,6 @@ type
   end;
 
 implementation
-
-class procedure Packet3.Read(AContext: TIdContext); // client->server
-begin
-
-end;
 
 class procedure Packet3.Write(AContext: TIdContext);
 var
@@ -115,6 +109,7 @@ class procedure Packet3.Write(AContext: TIdContext; ChunkSize: SmallInt;
 begin
   with AContext.Connection do
   begin
+    CheckForGracefulDisconnect(True);
     IOHandler.Write(3); // Packet ID
     IOHandler.Write(ChunkSize);
     IOHandler.Write(Data);
