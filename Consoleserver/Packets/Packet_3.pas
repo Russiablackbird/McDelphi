@@ -4,6 +4,7 @@ interface
 
 uses
   System.SysUtils,
+  System.SyncObjs,
   System.Classes,
   IdTCPServer,
   IdContext,
@@ -21,6 +22,9 @@ type
   end;
 
 implementation
+
+uses
+  Server;
 
 class procedure Packet3.Write(AContext: TIdContext);
 var
@@ -40,6 +44,7 @@ begin
   begin
     if (Point + 1024 < GZ.Size) then
     begin
+
       SetLength(Data, 1024);
       GZ.ReadData(Data, 1024);
       Percent := round(Point / GZ.Size * 100);
@@ -57,51 +62,6 @@ begin
   GZ.Clear;
   GZ.Free;
   SetLength(CompressMap, 0);
-{$REGION 'MyRegion'}
-  // with AContext.Connection do
-  // begin
-
-  // Packet4.Write(AContext);
-
-  // Player := PlayersStack.Items[AContext];
-
-  // if FW = true then
-  // begin
-  // Packet8.Write(AContext, 255, Player.X, Player.Y, Player.Z, Player.Yaw,
-  // Player.Pitch);
-  // end
-  // else
-  // begin
-  // Packet7.Write(AContext, 255, Player.UserName, Player.X, Player.Y,
-  // Player.Z, Player.Yaw, Player.Pitch);
-  // end;
-
-  // TempPlayer := PlayersStack.Items[AContext];
-  //
-  // for Player in PlayersStack.Values do
-  // begin
-  //
-  // if Player.PID <> TempPlayer.PID then
-  // begin
-  // Packet7.Write(Player.Con, TempPlayer.PID, TempPlayer.UserName,
-  // TempPlayer.X, TempPlayer.Y, TempPlayer.Z, TempPlayer.Yaw,
-  // TempPlayer.Pitch);
-  //
-  // Packet7.Write(AContext, Player.PID, Player.UserName, Player.X, Player.Y,
-  // Player.Z, Player.Yaw, Player.Pitch);
-  //
-  // Msg := '&2+ &6' + TempPlayer.UserName.Replace(' ', '') +
-  // ' &6joined the game';
-  // Msg := Msg + stringofchar(' ', 64 - length(Msg));
-  //
-  // Packet13.Write(Player.Con, Msg);
-  // end;
-  //
-  // end;
-
-  // end;
-
-{$ENDREGION}
 end;
 
 class procedure Packet3.Write(AContext: TIdContext; ChunkSize: SmallInt;

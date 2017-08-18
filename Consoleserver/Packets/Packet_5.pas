@@ -4,6 +4,7 @@ interface
 
 uses
   System.SysUtils,
+  System.SyncObjs,
   IdTCPServer,
   IdContext,
   IdGlobal,
@@ -20,12 +21,16 @@ type
 
 implementation
 
+uses
+  Server;
+
 class procedure Packet5.Read(AContext: TIdContext);
 var
   X, Y, Z: SmallInt;
   Mode, BId: Byte;
   Player: PlayerStruct;
 begin
+
   with AContext.Connection do
   begin
     X := IOHandler.ReadInt16;
@@ -36,15 +41,20 @@ begin
 
     if Mode = 0 then
     begin
+      // CS.Enter;
       MapArray[Ext.Index(X, Y, Z, GLWorld.MapSize.X, GLWorld.MapSize.Z)] := 0;
       Packet5.Write(AContext, X, Y, Z, 0);
+      // CS.Leave;
     end
     else
     begin
+      // CS.Enter;
       MapArray[Ext.Index(X, Y, Z, GLWorld.MapSize.X, GLWorld.MapSize.Z)] := BId;
       Packet5.Write(AContext, X, Y, Z, BId);
+      // CS.Leave;
     end;
 
+    // CS.Enter;
     for Player in PlayersStack.Values do
     begin
       if Player.Con <> AContext then
@@ -60,8 +70,10 @@ begin
       end;
 
     end;
+    // CS.Leave;
 
   end;
+
 end;
 
 class procedure Packet5.Write(AContext: TIdContext; X, Y, Z: SmallInt;

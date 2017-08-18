@@ -29,7 +29,8 @@ uses
   Packet_12 in 'Packets\Packet_12.pas',
   Packet_13 in 'Packets\Packet_13.pas',
   Packet_14 in 'Packets\Packet_14.pas',
-  Noise in 'Utils\Noise.pas';
+  Noise in 'Utils\Noise.pas',
+  PluginManager in 'Utils\PluginManager.pas';
 
 var
   ServerTrigger: Boolean = True;
@@ -41,8 +42,8 @@ begin
     PlayerManager.init;
     LoadCgf;
     WorldMgr.init;
-    HeartBeat.Create;
     Server.Srv.OnCreate(Config.Cgf.ServerPort, Config.Cgf.Max_Players, 5000);
+    HeartBeat.Create;
     PrintInfo('Сервер запущен');
   except
     on E: Exception do

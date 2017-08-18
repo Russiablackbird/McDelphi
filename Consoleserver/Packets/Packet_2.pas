@@ -4,6 +4,7 @@ interface
 
 uses
   System.SysUtils,
+  System.SyncObjs,
   IdTCPServer,
   IdContext,
   IdGlobal,
@@ -16,6 +17,9 @@ type
   end;
 
 implementation
+
+uses
+  Server;
 
 class procedure Packet2.Write(AContext: TIdContext);
 begin

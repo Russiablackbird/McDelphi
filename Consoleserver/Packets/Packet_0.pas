@@ -4,6 +4,7 @@ interface
 
 uses
   System.SysUtils,
+  System.SyncObjs,
   IdTCPServer,
   IdContext,
   IdGlobal,
@@ -11,7 +12,6 @@ uses
   System.Generics.Defaults,
   System.Generics.Collections,
   Packet_14;
-
 
 type
   Packet0 = class(TObject)
@@ -24,29 +24,25 @@ type
 
 implementation
 
+uses
+  Server;
+
 class procedure Packet0.Read(AContext: TIdContext); // client->server
 var
   Vers: Byte;
   UserName: String;
   VerKey: String;
-  Unused: Byte;
 begin
+  CS.Enter;
   With AContext.Connection do
   begin
     Vers := IOHandler.ReadByte;
     UserName := IOHandler.ReadString(64, nil);
     VerKey := IOHandler.ReadString(64, nil);
-    Unused := IOHandler.ReadByte;
-
-   // if Unused = 66 then
-   // begin
-     //   Packet14.Write(AContext,'Use classical or classical+hax');
-  //  end
-   // else
-   // begin
-       PlayerManager.PlayerIdent(Vers, UserName, VerKey, AContext);
-   // end;
+    IOHandler.ReadByte;
+    PlayerManager.PlayerIdent(Vers, UserName, VerKey, AContext);
   end;
+  CS.Leave;
 end;
 
 class procedure Packet0.Write(AContext: TIdContext; Vers: Byte;

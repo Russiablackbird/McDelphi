@@ -4,11 +4,13 @@ interface
 
 uses
   System.SysUtils,
+  System.SyncObjs,
   IdTCPServer,
   IdContext,
   IdGlobal,
   PlayerHandler,
-  System.RegularExpressions;
+  System.RegularExpressions,
+  PluginManager;
 
 type
   Packet13 = class(TObject) // Message
@@ -19,18 +21,25 @@ type
 
 implementation
 
+Uses
+  Server;
+
 class procedure Packet13.Read(AContext: TIdContext);
 var
   Msg, Msg1, Msg2: string;
-  Unused: Byte;
   Player: PlayerStruct;
   NickName: string;
   m: TMatch;
+
 begin
+  // CS.Enter;
+
+   Plugin_Mgr.Mess(Msg,AContext);
+
 
   with AContext.Connection do
   begin
-    Unused := IOHandler.ReadByte;
+    IOHandler.ReadByte;
     Msg := IOHandler.ReadString(64, nil);
     NickName := PlayersStack.Items[AContext].UserName.Replace(' ', '');
     NickName := '&2[' + NickName + ']: &7';
@@ -86,6 +95,8 @@ begin
       Packet13.Write(AContext, Msg1);
     end;
   end;
+
+  // CS.Leave;
 end;
 
 class procedure Packet13.Write(AContext: TIdContext; Msg: string);

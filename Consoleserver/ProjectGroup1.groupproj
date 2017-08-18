@@ -1,0 +1,48 @@
+﻿<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+    <PropertyGroup>
+        <ProjectGuid>{A7263501-11DC-479C-A474-D476BAEAB755}</ProjectGuid>
+    </PropertyGroup>
+    <ItemGroup>
+        <Projects Include="ConsoleServer.dproj">
+            <Dependencies/>
+        </Projects>
+        <Projects Include="PluginsProject\PluginExample.dproj">
+            <Dependencies/>
+        </Projects>
+    </ItemGroup>
+    <ProjectExtensions>
+        <Borland.Personality>Default.Personality.12</Borland.Personality>
+        <Borland.ProjectType/>
+        <BorlandProject>
+            <Default.Personality/>
+        </BorlandProject>
+    </ProjectExtensions>
+    <Target Name="ConsoleServer">
+        <MSBuild Projects="ConsoleServer.dproj"/>
+    </Target>
+    <Target Name="ConsoleServer:Clean">
+        <MSBuild Projects="ConsoleServer.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="ConsoleServer:Make">
+        <MSBuild Projects="ConsoleServer.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="PluginExample">
+        <MSBuild Projects="PluginsProject\PluginExample.dproj"/>
+    </Target>
+    <Target Name="PluginExample:Clean">
+        <MSBuild Projects="PluginsProject\PluginExample.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="PluginExample:Make">
+        <MSBuild Projects="PluginsProject\PluginExample.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="Build">
+        <CallTarget Targets="ConsoleServer;PluginExample"/>
+    </Target>
+    <Target Name="Clean">
+        <CallTarget Targets="ConsoleServer:Clean;PluginExample:Clean"/>
+    </Target>
+    <Target Name="Make">
+        <CallTarget Targets="ConsoleServer:Make;PluginExample:Make"/>
+    </Target>
+    <Import Project="$(BDS)\Bin\CodeGear.Group.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Group.Targets')"/>
+</Project>

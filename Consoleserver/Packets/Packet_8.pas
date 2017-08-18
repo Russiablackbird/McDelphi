@@ -4,6 +4,7 @@ interface
 
 uses
   System.SysUtils,
+  System.SyncObjs,
   IdTCPServer,
   IdContext,
   IdGlobal,
@@ -20,15 +21,17 @@ type
 
 implementation
 
+Uses
+  Server;
+
 class procedure Packet8.Read(AContext: TIdContext);
 var
   Player: PlayerStruct;
-  Unused: Byte;
 begin
 
   with AContext.Connection do
   begin
-    Unused := IOHandler.ReadByte;
+    IOHandler.ReadByte;
     Player := PlayersStack.Items[AContext];
     Player.X := IOHandler.ReadInt16;
     Player.Y := IOHandler.ReadInt16;
@@ -46,7 +49,7 @@ var
   PID, Yaw, Pitch: Byte;
   Player: PlayerStruct;
 begin
-
+  // CS.Enter;
   for Player in PlayersStack.Values do
   begin
     if Player.Con <> AContext then
@@ -59,14 +62,13 @@ begin
       Pitch := Player.Pitch;
       Packet8.Write(AContext, PID, X, Y, Z, Yaw, Pitch);
     end;
-
   end;
+  // CS.Leave;
 end;
 
 class procedure Packet8.Write(AContext: TIdContext; PID: Byte; X: SmallInt;
   Y: SmallInt; Z: SmallInt; Yaw: Byte; Pitch: Byte);
 begin
-
   with AContext.Connection do
   begin
     CheckForGracefulDisconnect(True);
@@ -78,7 +80,6 @@ begin
     IOHandler.Write(Yaw);
     IOHandler.Write(Pitch);
   end;
-
 end;
 
 end.

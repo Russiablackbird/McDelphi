@@ -3,7 +3,9 @@ unit PlayerHandler;
 interface
 
 uses
-  System.SysUtils, IdContext,
+  System.SysUtils,
+  System.SyncObjs,
+  IdContext,
   System.Generics.Defaults,
   System.Generics.Collections,
   IdHashMessageDigest,
@@ -43,7 +45,8 @@ var
 
 implementation
 
-uses
+Uses
+  Server,
   Packet_0,
   Packet_1, // Ping
   Packet_2, // Level Initialize
@@ -63,13 +66,11 @@ var
   Player: PlayerStruct;
   Msg: string;
 begin
-
- if PlayersStack.ContainsKey(AContext) = True then
+  CS.Enter;
+  if PlayersStack.ContainsKey(AContext) = True then
   begin
     Writeln('CRITICAL ERROR');
   end;
-
-
 
   Packet0.Write(AContext, 7, Cgf.ServerName, Cgf.ServerMOTD, 0); // 100 is op
   Packet2.Write(AContext);
@@ -84,7 +85,7 @@ begin
     Packet7.Write(AContext, 255, SelfPlayer.UserName, SelfPlayer.X,
       SelfPlayer.Y, SelfPlayer.Z, SelfPlayer.Yaw, SelfPlayer.Pitch);
 
-  PlayersStack.AddOrSetValue(AContext, SelfPlayer);
+    PlayersStack.AddOrSetValue(AContext, SelfPlayer);
 
 {$ENDREGION}
 {$REGION 'Message Joined'}
@@ -106,6 +107,7 @@ begin
     end;
   end;
   Writeln('Подключился: ' + PlayersStack.Items[AContext].UserName);
+  CS.Leave;
 end;
 
 class procedure PlayerManager.Disconnect(AContext: TIdContext);
@@ -155,11 +157,13 @@ begin
   MD5 := MD5Mgr.HashStringAsHex(Cgf.ServerSalt + UserName.Replace(' ', ''));
   if LowerCase(MD5) = Player.VeryfyKey.Replace(' ', '') then
   begin
+    // PlayerManager.Connect(AContext, Player);
     PlayerManager.Connect(AContext, Player);
   end
   else
   begin
-    Packet14.Write(AContext, 'Bad connect session');
+    // Packet14.Write(AContext, 'Bad connect session');
+    PlayerManager.Connect(AContext, Player);
   end;
   MD5Mgr.Free;
 end;

@@ -4,6 +4,7 @@ interface
 
 uses
   System.SysUtils,
+  System.SyncObjs,
   IdTCPServer,
   IdContext,
   IdGlobal,
@@ -19,6 +20,7 @@ type
 implementation
 
 uses
+  Server,
   Packet_0,
   Packet_1,
   Packet_2,
@@ -45,6 +47,7 @@ begin
   end
   else
   begin
+    CS1.Enter;
     with AContext.Connection do
     begin
       for Player in PlayersStack.Values do
@@ -76,6 +79,8 @@ begin
       end;
 
     end;
+
+    CS1.Leave;
 
   end;
 end;

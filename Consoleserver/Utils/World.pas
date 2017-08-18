@@ -36,8 +36,8 @@ class procedure WorldMgr.Init;
 begin
   if FileExists('maps/world.btm') then
   begin
-     WorldMgr.Load;
-    //  WorldMgr.Generate;
+    WorldMgr.Load;
+    // WorldMgr.Generate;
   end
   else
   begin
@@ -134,7 +134,8 @@ begin
   ZipMap := TMemoryStream.Create;
   seed := Noise._Noise.Create;
   seed.Noise(RandomRange(200, MaxInt), GLWorld.MapSize.x, GLWorld.MapSize.z);
-  SetLength(MapArray,GLWorld.MapSize.x * GLWorld.MapSize.y *GLWorld.MapSize.z);
+  SetLength(MapArray, GLWorld.MapSize.x * GLWorld.MapSize.y *
+    GLWorld.MapSize.z);
 
 {$REGION 'MAP'}
   x := 0;
@@ -159,8 +160,7 @@ begin
     Inc(x);
   end;
 {$ENDREGION}
-
-Writeln('Generation finish');
+  Writeln('Generation finish');
 end;
 
 class function WorldMgr.GetTile(x: Integer; y: Integer; z: Integer;

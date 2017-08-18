@@ -4,11 +4,13 @@ interface
 
 uses
   System.SysUtils,
+  System.SyncObjs,
   IdTCPServer,
   IdContext,
   IdGlobal,
   PacketHandler,
   PlayerHandler,
+  PluginManager,
   Packet_12,
   Packet_13,
   Packet_14;
@@ -28,6 +30,10 @@ type
 
   end;
 
+var
+  CS: TCriticalSection;
+  CS1: TCriticalSection;
+  Plugin_Mgr:PluginMgr;
 implementation
 
 procedure Srv.ServerException(AContext: TIdContext; AException: Exception);
@@ -69,10 +75,17 @@ begin
   TCPServer.OnDisconnect := ServerDisconnect;
   TCPServer.OnException := ServerException;
   TCPServer.Active := True;
+  Plugin_Mgr:=PluginMgr.Create;
+  CS := TCriticalSection.Create;
+  CS1 := TCriticalSection.Create;
+
 end;
 
 destructor Srv.OnClose;
 begin
+  CS.Free;
+  CS1.Free;
+  Plugin_Mgr.Free;
   TCPServer.Active := False;
 end;
 
