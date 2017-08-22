@@ -3,7 +3,7 @@ unit PluginManager;
 interface
 
 Uses System.SysUtils, WinApi.Windows, System.Classes,
-  System.Generics.Collections,PlayerHandler, IdGlobal, IdContext;
+  System.Generics.Collections, PlayerHandler, IdGlobal, IdContext;
 
 type
   PluginStruct = record
@@ -25,24 +25,25 @@ type
   PluginMgr = class(TObject)
   private
   var
-    Init:function(Stack:TDictionary<TIdContext,PlayerStruct>):Boolean; stdcall;
-
+    Init: function(Stack: TDictionary<TIdContext, PlayerStruct>)
+      : Boolean; stdcall;
 
     Name: function(): String; stdcall;
     Description: function(): String; stdcall;
     Version: function(): String; stdcall;
     OnConnect: function(): Boolean; stdcall;
     OnMessage: function(Msg: string; AContext: TIdContext): Boolean; stdcall;
-    OnPosition: function(AContext:TIdContext;X,Y,Z:SmallInt; Mode,BId: Byte): Boolean; stdcall;
+    OnPosition: function(AContext: TIdContext; X, Y, Z: SmallInt;
+      Mode, BId: Byte): Boolean; stdcall;
     OnSetBlock: function(): Boolean; stdcall;
-
 
   protected
 
   public
 
     function Mess(Msg: string; AContext: TIdContext): Boolean;
-    function Pos(AContext:TIdContext;X,Y,Z:SmallInt;Mode,BId:Byte):Boolean;
+    function Pos(AContext: TIdContext; X, Y, Z: SmallInt;
+      Mode, BId: Byte): Boolean;
     constructor Create;
 
   end;
@@ -102,7 +103,7 @@ begin
       @OnMessage := Plugin_Struct.OnMessage;
       @OnPosition := Plugin_Struct.OnPosition;
       @OnSetBlock := Plugin_Struct.OnSetBlock;
-      @Init:=GetProcAddress(Plugin_Struct.Handle,'Init');
+      @Init := GetProcAddress(Plugin_Struct.Handle, 'Init');
       Plugin_Struct.Name := Name;
       Plugin_Struct.Description := Description;
       Plugin_Struct.Version := Version;
@@ -123,14 +124,13 @@ begin
   for Plugin_Struct in PluginStack.Values do
   begin
     @OnMessage := Plugin_Struct.OnMessage;
-    if OnMessage(Msg,AContext) = true then
+    if OnMessage(Msg, AContext) = true then
     begin
       Trigger := true;
     end;
   end;
   Result := Trigger;
 end;
-
 
 function PluginMgr.Pos;
 var
@@ -140,14 +140,13 @@ begin
   Trigger := False;
   for Plugin_Struct in PluginStack.Values do
   begin
-  @OnPosition:=Plugin_Struct.OnPosition;
-    if OnPosition(AContext,x,y,z,Mode,BId) = true then
+    @OnPosition := Plugin_Struct.OnPosition;
+    if OnPosition(AContext, X, Y, Z, Mode, BId) = true then
     begin
       Trigger := true;
     end;
   end;
   Result := Trigger;
 end;
-
 
 end.

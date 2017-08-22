@@ -24,6 +24,10 @@ implementation
 Uses
   Server;
 
+var
+  X, Y, Z: SmallInt;
+  PID, Yaw, Pitch: Byte;
+
 class procedure Packet8.Read(AContext: TIdContext);
 var
   Player: PlayerStruct;
@@ -32,6 +36,8 @@ begin
   with AContext.Connection do
   begin
     IOHandler.ReadByte;
+
+    System.TMonitor.Enter(PlayersStack);
     Player := PlayersStack.Items[AContext];
     Player.X := IOHandler.ReadInt16;
     Player.Y := IOHandler.ReadInt16;
@@ -39,17 +45,21 @@ begin
     Player.Yaw := IOHandler.ReadByte;
     Player.Pitch := IOHandler.ReadByte;
     PlayersStack.AddOrSetValue(AContext, Player);
+    System.TMonitor.Exit(PlayersStack);
+
+
+
+
     Packet8.Write(AContext);
   end;
 end;
 
 class procedure Packet8.Write(AContext: TIdContext);
 var
-  X, Y, Z: SmallInt;
-  PID, Yaw, Pitch: Byte;
   Player: PlayerStruct;
 begin
-  // CS.Enter;
+
+  System.TMonitor.Enter(PlayersStack);
   for Player in PlayersStack.Values do
   begin
     if Player.Con <> AContext then
@@ -63,7 +73,8 @@ begin
       Packet8.Write(AContext, PID, X, Y, Z, Yaw, Pitch);
     end;
   end;
-  // CS.Leave;
+  System.TMonitor.Exit(PlayersStack);
+
 end;
 
 class procedure Packet8.Write(AContext: TIdContext; PID: Byte; X: SmallInt;
@@ -71,7 +82,6 @@ class procedure Packet8.Write(AContext: TIdContext; PID: Byte; X: SmallInt;
 begin
   with AContext.Connection do
   begin
-    CheckForGracefulDisconnect(True);
     IOHandler.Write(8);
     IOHandler.Write(PID);
     IOHandler.Write(X);

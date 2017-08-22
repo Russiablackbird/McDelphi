@@ -25,7 +25,6 @@ class procedure Packet4.Write(AContext: TIdContext);
 begin
   with AContext.Connection do
   begin
-    CheckForGracefulDisconnect(True);
     IOHandler.Write(4); // Packet ID
     IOHandler.Write(GLWorld.MapSize.X);
     IOHandler.Write(GLWorld.MapSize.Y);

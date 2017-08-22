@@ -33,7 +33,6 @@ var
   UserName: String;
   VerKey: String;
 begin
-  CS.Enter;
   With AContext.Connection do
   begin
     Vers := IOHandler.ReadByte;
@@ -42,7 +41,6 @@ begin
     IOHandler.ReadByte;
     PlayerManager.PlayerIdent(Vers, UserName, VerKey, AContext);
   end;
-  CS.Leave;
 end;
 
 class procedure Packet0.Write(AContext: TIdContext; Vers: Byte;

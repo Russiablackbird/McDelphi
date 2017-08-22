@@ -32,8 +32,8 @@ var
   Argv: String;
 begin
   HeartBeatHTTP := TIdHTTP.Create;
-  IdSSLIOHandlerSocket := TIdSSLIOHandlerSocketOpenSSL.Create(nil);
-  HeartBeatHTTP.IOHandler := IdSSLIOHandlerSocket;
+  // IdSSLIOHandlerSocket := TIdSSLIOHandlerSocketOpenSSL.Create(nil);
+  // HeartBeatHTTP.IOHandler := IdSSLIOHandlerSocket;
   HeartBeatHTTP.HandleRedirects := True;
   while True do
   begin
@@ -41,9 +41,8 @@ begin
       ('name=' + Cgf.ServerName + '&') + ('public=True&') + ('version=7&') +
       ('salt=' + Cgf.ServerSalt + '&') + ('users=') +
       IntToStr(PlayersStack.Count + 5);
-    // PrintInfo(HeartBeatHTTP.Get
-    // ('https://www.classicube.net/heartbeat.jsp?' + Argv));
-    HeartBeatHTTP.Get('https://www.classicube.net/heartbeat.jsp?' + Argv);
+
+    HeartBeatHTTP.Get('http://www.classicube.net/heartbeat.jsp?' + Argv);
     Sleep(15000);
   end;
 end;

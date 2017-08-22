@@ -5,6 +5,7 @@ interface
 uses
   System.SysUtils,
   System.SyncObjs,
+  System.Threading,
   IdTCPServer,
   IdContext,
   IdGlobal,
@@ -34,54 +35,77 @@ uses
   Packet_13,
   Packet_14;
 
+threadvar CommandID: Byte;
+
+var
+  Task: ITask;
+
 class procedure PacketManager.PacketInput(AContext: TIdContext);
 var
-  CommandID: Byte;
   Player: PlayerStruct;
+
 begin
   CommandID := AContext.Connection.IOHandler.ReadByte;
 
   if CommandID = 0 then
   begin
-    Packet0.Read(AContext); // Player identification
+
+    try
+      ÑonnectCS.Enter;
+      Packet0.Read(AContext); // Player identification
+    finally
+      ÑonnectCS.Leave;
+    end;
+
   end
   else
   begin
-    CS1.Enter;
     with AContext.Connection do
     begin
-      for Player in PlayersStack.Values do
-      begin
-        if Player.Con = AContext then
-        begin
-          case CommandID of
-            5:
-              begin
-                Packet5.Read(AContext); // Set block
-              end;
-            8:
-              begin
-                Packet8.Read(AContext); // Position and orientation
-              end;
-            13:
-              begin
-                Packet13.Read(AContext); // read message
-              end;
-          else
-            begin
-              AContext.Connection.IOHandler.InputBuffer.Clear;
-              AContext.Connection.Disconnect;
+
+      // for Player in PlayersStack.Values do
+      // begin
+      // if Player.Con = AContext then
+      // begin
+      case CommandID of
+        5:
+          begin
+            Packet5.Read(AContext); // Set block
+          end;
+        8:
+          begin
+            try
+              SetPositionCS.Enter;
+              Packet8.Read(AContext); // Position and orientation
+            finally
+              SetPositionCS.Leave;
             end;
           end;
-          Packet1.Write(AContext);
+        13:
+          begin
+            try
+              OnMessageCS.Enter;
+              Packet13.Read(AContext); // read message
+            finally
+              OnMessageCS.Leave;
+            end;
+
+          end;
+      else
+        begin
+          try
+            CS1.Enter;
+            AContext.Connection.Disconnect;
+          finally
+            CS1.Leave;
+          end;
+
         end;
-
       end;
-
+      Packet1.Write(AContext);
+      // end;
+      // end;
     end;
-
-    CS1.Leave;
-
   end;
 end;
 

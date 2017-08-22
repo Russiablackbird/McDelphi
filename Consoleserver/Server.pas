@@ -10,10 +10,7 @@ uses
   IdGlobal,
   PacketHandler,
   PlayerHandler,
-  PluginManager,
-  Packet_12,
-  Packet_13,
-  Packet_14;
+  PluginManager;
 
 type
   Srv = class(TObject)
@@ -33,12 +30,19 @@ type
 var
   CS: TCriticalSection;
   CS1: TCriticalSection;
-  Plugin_Mgr:PluginMgr;
+  ÑonnectCS: TCriticalSection;
+  SetBlockCS: TCriticalSection;
+  SetPositionCS: TCriticalSection;
+  OnMessageCS: TCriticalSection;
+
+  _PluginMgr: PluginMgr;
+
 implementation
 
 procedure Srv.ServerException(AContext: TIdContext; AException: Exception);
 begin
   Writeln('Error: ' + AException.Message);
+  CS1.Leave;
 end;
 
 procedure Srv.ServerExecute(AContext: TIdContext);
@@ -53,15 +57,24 @@ end;
 
 procedure Srv.ServerDisconnect(AContext: TIdContext);
 begin
-  if PlayersStack.ContainsKey(AContext) = True then
-  begin
-    PlayerManager.Disconnect(AContext);
+  try
+    CS.Enter;
+    if PlayersStack.ContainsKey(AContext) = True then
+    begin
+      PlayerManager.Disconnect(AContext);
+    end;
+  finally
+    CS.Leave;
   end;
+
 end;
 
 constructor Srv.OnCreate(Port, MaxClient, TimeOut: Word);
 begin
   inherited Create;
+
+  _PluginMgr := PluginMgr.Create;
+
   TCPServer := TIdTCPServer.Create(nil);
   TCPServer.Bindings.Clear;
   TCPServer.DefaultPort := Port;
@@ -69,23 +82,29 @@ begin
   TCPServer.Bindings.Add.IP := '127.0.0.1';
   TCPServer.ListenQueue := 1;
   TCPServer.MaxConnections := MaxClient;
-  TCPServer.TerminateWaitTime := TimeOut;
+  TCPServer.TerminateWaitTime := 10000;
   TCPServer.OnConnect := ServerConnect;
   TCPServer.OnExecute := ServerExecute;
   TCPServer.OnDisconnect := ServerDisconnect;
   TCPServer.OnException := ServerException;
   TCPServer.Active := True;
-  Plugin_Mgr:=PluginMgr.Create;
+
   CS := TCriticalSection.Create;
   CS1 := TCriticalSection.Create;
-
+  ÑonnectCS := TCriticalSection.Create;
+  SetBlockCS := TCriticalSection.Create;
+  SetPositionCS := TCriticalSection.Create;
+  OnMessageCS := TCriticalSection.Create;
 end;
 
 destructor Srv.OnClose;
 begin
-  CS.Free;
-  CS1.Free;
-  Plugin_Mgr.Free;
+  // CS.Free;
+  // CS1.Free;
+  ÑonnectCS.Free;
+  SetBlockCS.Free;
+  SetPositionCS.Free;
+  OnMessageCS.Free;
   TCPServer.Active := False;
 end;
 

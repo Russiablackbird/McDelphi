@@ -25,7 +25,6 @@ class procedure Packet2.Write(AContext: TIdContext);
 begin
   with AContext.Connection do
   begin
-    CheckForGracefulDisconnect(True);
     IOHandler.Write(2); // Packet ID
   end;
 end;

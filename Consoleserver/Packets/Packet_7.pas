@@ -30,7 +30,6 @@ begin
 
   with AContext.Connection do
   begin
-    CheckForGracefulDisconnect(True);
     IOHandler.Write(7);
     IOHandler.Write(PID);
     IOHandler.Write(UName);

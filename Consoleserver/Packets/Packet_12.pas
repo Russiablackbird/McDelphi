@@ -21,7 +21,6 @@ class procedure Packet12.Write(AContext: TIdContext; PId: Byte);
 begin
   with AContext.Connection do
   begin
-    CheckForGracefulDisconnect(True);
     IOHandler.Write(12);
     IOHandler.Write(PId);
   end;

@@ -45,19 +45,20 @@ begin
     Server.Srv.OnCreate(Config.Cgf.ServerPort, Config.Cgf.Max_Players, 5000);
     HeartBeat.Create;
     PrintInfo('Сервер запущен');
+    While ServerTrigger do
+    begin
+      Readln(comm);
+      if comm = 'save' then
+      begin
+        WorldMgr.Save;
+      end;
+      sleep(1);
+
+    end;
+
   except
     on E: Exception do
       Writeln(E.ClassName, ': ', E.Message);
-  end;
-  While ServerTrigger do
-  begin
-    Readln(comm);
-    if comm = 'save' then
-    begin
-      WorldMgr.Save;
-    end;
-    sleep(1);
-
   end;
 
 end.

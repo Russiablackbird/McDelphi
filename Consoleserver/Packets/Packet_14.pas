@@ -17,19 +17,17 @@ type
 
 implementation
 
-uses
-  Server;
-
 class procedure Packet14.Write(AContext: TIdContext; Reasons: string);
-
+var
+Msg:string;
 begin
   with AContext.Connection do
   begin
     IOHandler.Write(14);
-    Reasons := Reasons + stringofchar(' ', 64 - Length(Reasons));
+    Msg:=Reasons;
+    Msg := Msg + stringofchar(' ', 64 - Length(Msg));
     Delete(Reasons, 65, MaxInt);
     IOHandler.Write(Reasons);
-    Disconnect;
   end;
 end;
 

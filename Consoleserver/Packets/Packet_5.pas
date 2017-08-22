@@ -24,13 +24,14 @@ implementation
 uses
   Server;
 
+
+
 class procedure Packet5.Read(AContext: TIdContext);
 var
   X, Y, Z: SmallInt;
   Mode, BId: Byte;
   Player: PlayerStruct;
 begin
-
   with AContext.Connection do
   begin
     X := IOHandler.ReadInt16;
@@ -39,38 +40,42 @@ begin
     Mode := IOHandler.ReadByte;
     BId := IOHandler.ReadByte;
 
-    if Mode = 0 then
-    begin
-      // CS.Enter;
-      MapArray[Ext.Index(X, Y, Z, GLWorld.MapSize.X, GLWorld.MapSize.Z)] := 0;
-      Packet5.Write(AContext, X, Y, Z, 0);
-      // CS.Leave;
-    end
-    else
-    begin
-      // CS.Enter;
-      MapArray[Ext.Index(X, Y, Z, GLWorld.MapSize.X, GLWorld.MapSize.Z)] := BId;
-      Packet5.Write(AContext, X, Y, Z, BId);
-      // CS.Leave;
-    end;
+    try
+      SetBlockCS.Enter;
 
-    // CS.Enter;
-    for Player in PlayersStack.Values do
-    begin
-      if Player.Con <> AContext then
+      if Mode = 0 then
       begin
-        if Mode = 0 then
-        begin
-          Packet5.Write(Player.Con, X, Y, Z, 0);
-        end
-        else
-        begin
-          Packet5.Write(Player.Con, X, Y, Z, BId);
-        end;
+        MapArray[Ext.Index(X, Y, Z, GLWorld.MapSize.X, GLWorld.MapSize.Z)] := 0;
+        Packet5.Write(AContext, X, Y, Z, 0);
+      end
+      else
+      begin
+        MapArray[Ext.Index(X, Y, Z, GLWorld.MapSize.X,
+          GLWorld.MapSize.Z)] := BId;
+        Packet5.Write(AContext, X, Y, Z, BId);
       end;
 
+      System.TMonitor.Enter(PlayersStack);
+      for Player in PlayersStack.Values do
+      begin
+        if Player.Con <> AContext then
+        begin
+          if Mode = 0 then
+          begin
+            Packet5.Write(Player.Con, X, Y, Z, 0);
+          end
+          else
+          begin
+            Packet5.Write(Player.Con, X, Y, Z, BId);
+          end;
+        end;
+      end;
+      System.TMonitor.Exit(PlayersStack);
+    finally
+      begin
+        SetBlockCS.Leave;
+      end;
     end;
-    // CS.Leave;
 
   end;
 
@@ -81,7 +86,6 @@ class procedure Packet5.Write(AContext: TIdContext; X, Y, Z: SmallInt;
 begin
   with AContext.Connection do
   begin
-    CheckForGracefulDisconnect(True);
     IOHandler.Write(6);
     IOHandler.Write(X);
     IOHandler.Write(Y);
