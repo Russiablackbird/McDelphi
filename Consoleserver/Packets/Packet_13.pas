@@ -4,14 +4,10 @@ interface
 
 uses
   System.SysUtils,
-  System.SyncObjs,
-  IdTCPServer,
   IdContext,
-  IdGlobal,
   PlayerHandler,
   System.RegularExpressions,
-  PluginManager,
-  Server;
+  PluginManager;
 
 type
   Packet13 = class(TObject) // Message
@@ -34,70 +30,53 @@ begin
   begin
     IOHandler.ReadByte;
     Msg := IOHandler.ReadString(64, nil);
+    NickName := PlayersStack.Items[AContext].UserName.Replace(' ', '');
+    NickName := '&2[' + NickName + ']: &7';
 
-    if _PluginMgr.Mess(Msg, AContext) then
+    m := TRegEx.Match(Msg, '[^\s]+');
+    while m.Success do
     begin
+      Msg1 := Msg1 + ' ' + m.Value;
+      m := m.NextMatch;
+    end;
+    Msg1 := Concat(NickName, Msg1);
+    if Length(Msg1) > 64 then
+    begin
+      Msg2 := Copy(Msg1, 65, Length(Msg1) - 63);
+      Msg1 := Msg1.Replace('%', '&');
+      Msg2 := Concat('> ', '&7', Msg2);
+      Msg2 := Msg2 + stringofchar(' ', 64 - Length(Msg2));
+      Msg2 := Msg2.Replace('%', '&');
+      Delete(Msg1, 65, MaxInt);
+      Delete(Msg2, 65, MaxInt);
 
+      for Player in PlayersStack.Values do
+      begin
+        if Player.Con <> AContext then
+        begin
+          Packet13.Write(Player.Con, Msg1);
+          Packet13.Write(Player.Con, Msg2);
+        end;
+      end;
+
+      Packet13.Write(AContext, Msg1);
+      Packet13.Write(AContext, Msg2);
     end
 
     else
-
     begin
-      NickName := PlayersStack.Items[AContext].UserName.Replace(' ', '');
-      NickName := '&2[' + NickName + ']: &7';
-
-      m := TRegEx.Match(Msg, '[^\s]+');
-      while m.Success do
+      Msg1 := Msg1 + stringofchar(' ', 64 - Length(Msg1));
+      Msg1 := Msg1.Replace('%', '&');
+      Delete(Msg1, 65, MaxInt);
+      for Player in PlayersStack.Values do
       begin
-        Msg1 := Msg1 + ' ' + m.Value;
-        m := m.NextMatch;
+        if Player.Con <> AContext then
+        begin
+          Packet13.Write(Player.Con, Msg1);
+        end;
       end;
 
-      Msg1 := Concat(NickName, Msg1);
-
-      if Length(Msg1) > 64 then
-      begin
-        Msg2 := Copy(Msg1, 65, Length(Msg1) - 63);
-        Msg1 := Msg1.Replace('%', '&');
-        Msg2 := Concat('> ', '&7', Msg2);
-        Msg2 := Msg2 + stringofchar(' ', 64 - Length(Msg2));
-        Msg2 := Msg2.Replace('%', '&');
-        Delete(Msg1, 65, MaxInt);
-        Delete(Msg2, 65, MaxInt);
-
-        System.TMonitor.Enter(PlayersStack);
-        for Player in PlayersStack.Values do
-        begin
-          if Player.Con <> AContext then
-          begin
-            Packet13.Write(Player.Con, Msg1);
-            Packet13.Write(Player.Con, Msg2);
-          end;
-        end;
-        System.TMonitor.Exit(PlayersStack);
-
-        Packet13.Write(AContext, Msg1);
-        Packet13.Write(AContext, Msg2);
-      end
-
-      else
-      begin
-        Msg1 := Msg1 + stringofchar(' ', 64 - Length(Msg1));
-        Msg1 := Msg1.Replace('%', '&');
-        Delete(Msg1, 65, MaxInt);
-
-        System.TMonitor.Enter(PlayersStack);
-        for Player in PlayersStack.Values do
-        begin
-          if Player.Con <> AContext then
-          begin
-            Packet13.Write(Player.Con, Msg1);
-          end;
-        end;
-        System.TMonitor.Exit(PlayersStack);
-
-        Packet13.Write(AContext, Msg1);
-      end;
+      Packet13.Write(AContext, Msg1);
     end;
 
   end;

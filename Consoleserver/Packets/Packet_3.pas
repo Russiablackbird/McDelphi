@@ -4,9 +4,7 @@ interface
 
 uses
   System.SysUtils,
-  System.SyncObjs,
   System.Classes,
-  IdTCPServer,
   IdContext,
   IdGlobal,
   World,

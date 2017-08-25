@@ -3,7 +3,7 @@ unit PluginManager;
 interface
 
 Uses System.SysUtils, WinApi.Windows, System.Classes,
-  System.Generics.Collections, PlayerHandler, IdGlobal, IdContext;
+  Rapid.Generics, PlayerHandler, IdGlobal, IdContext;
 
 type
   PluginStruct = record
@@ -108,7 +108,7 @@ begin
       Plugin_Struct.Description := Description;
       Plugin_Struct.Version := Version;
 
-      Init(PlayersStack);
+      // Init(PlayersStack);
 
       PluginStack.AddOrSetValue(Plugin_Struct.Handle, Plugin_Struct);
     end;

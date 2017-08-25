@@ -3,11 +3,7 @@ unit Packet_4;
 interface
 
 uses
-  System.SysUtils,
-  System.SyncObjs,
-  IdTCPServer,
   IdContext,
-  IdGlobal,
   World;
 
 type
@@ -17,9 +13,6 @@ type
   end;
 
 implementation
-
-uses
-  Server;
 
 class procedure Packet4.Write(AContext: TIdContext);
 begin

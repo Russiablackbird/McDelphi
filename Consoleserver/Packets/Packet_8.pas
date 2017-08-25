@@ -4,10 +4,7 @@ interface
 
 uses
   System.SysUtils,
-  System.SyncObjs,
-  IdTCPServer,
   IdContext,
-  IdGlobal,
   PlayerHandler;
 
 type
@@ -21,9 +18,6 @@ type
 
 implementation
 
-Uses
-  Server;
-
 var
   X, Y, Z: SmallInt;
   PID, Yaw, Pitch: Byte;
@@ -36,8 +30,6 @@ begin
   with AContext.Connection do
   begin
     IOHandler.ReadByte;
-
-    System.TMonitor.Enter(PlayersStack);
     Player := PlayersStack.Items[AContext];
     Player.X := IOHandler.ReadInt16;
     Player.Y := IOHandler.ReadInt16;
@@ -45,11 +37,6 @@ begin
     Player.Yaw := IOHandler.ReadByte;
     Player.Pitch := IOHandler.ReadByte;
     PlayersStack.AddOrSetValue(AContext, Player);
-    System.TMonitor.Exit(PlayersStack);
-
-
-
-
     Packet8.Write(AContext);
   end;
 end;
@@ -58,8 +45,6 @@ class procedure Packet8.Write(AContext: TIdContext);
 var
   Player: PlayerStruct;
 begin
-
-  System.TMonitor.Enter(PlayersStack);
   for Player in PlayersStack.Values do
   begin
     if Player.Con <> AContext then
@@ -73,8 +58,6 @@ begin
       Packet8.Write(AContext, PID, X, Y, Z, Yaw, Pitch);
     end;
   end;
-  System.TMonitor.Exit(PlayersStack);
-
 end;
 
 class procedure Packet8.Write(AContext: TIdContext; PID: Byte; X: SmallInt;

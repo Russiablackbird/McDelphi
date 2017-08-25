@@ -141,14 +141,14 @@ begin
     n7 := NoiseGeneration(ix, py, pz);
     n8 := NoiseGeneration(px, py, pz);
 
-    b1 := n1;
-    b2 := n2;
-    b3 := n3;
-    b4 := n4;
-    b5 := n5;
-    b6 := n6;
-    b7 := n7;
-    b8 := n8;
+   // b1 := n1;
+   // b2 := n2;
+    //b3 := n3;
+   // b4 := n4;
+   // b5 := n5;
+   // b6 := n6;
+  //  b7 := n7;
+  //  b8 := n8;
 
   end;
 
@@ -162,9 +162,9 @@ begin
   i6 := Interpolate(i4, i5, v);
   v := Interpolate(z - iz);
 
-  ox := ix;
-  oy := iy;
-  oz := iz;
+  // ox := ix;
+  // oy := iy;
+  // oz := iz;
 
   Result := Interpolate(i3, i6, v);
 end;

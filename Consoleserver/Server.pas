@@ -9,8 +9,7 @@ uses
   IdContext,
   IdGlobal,
   PacketHandler,
-  PlayerHandler,
-  PluginManager;
+  PlayerHandler;
 
 type
   Srv = class(TObject)
@@ -28,21 +27,21 @@ type
   end;
 
 var
-  CS: TCriticalSection;
-  CS1: TCriticalSection;
-  ÑonnectCS: TCriticalSection;
+
+  ConnectCS: TCriticalSection;
   SetBlockCS: TCriticalSection;
   SetPositionCS: TCriticalSection;
   OnMessageCS: TCriticalSection;
+  DisconnectCS: TCriticalSection;
 
-  _PluginMgr: PluginMgr;
+  DictionaryCS: TCriticalSection;
+  UUIDCS: TCriticalSection;
 
 implementation
 
 procedure Srv.ServerException(AContext: TIdContext; AException: Exception);
 begin
-  Writeln('Error: ' + AException.Message);
-  CS1.Leave;
+
 end;
 
 procedure Srv.ServerExecute(AContext: TIdContext);
@@ -57,31 +56,30 @@ end;
 
 procedure Srv.ServerDisconnect(AContext: TIdContext);
 begin
+
   try
-    CS.Enter;
+    DisconnectCS.Enter;
     if PlayersStack.ContainsKey(AContext) = True then
     begin
       PlayerManager.Disconnect(AContext);
     end;
   finally
-    CS.Leave;
+    begin
+      DisconnectCS.Leave;
+    end;
   end;
 
 end;
 
 constructor Srv.OnCreate(Port, MaxClient, TimeOut: Word);
 begin
-  inherited Create;
-
-  _PluginMgr := PluginMgr.Create;
-
   TCPServer := TIdTCPServer.Create(nil);
   TCPServer.Bindings.Clear;
   TCPServer.DefaultPort := Port;
   TCPServer.Bindings.Add.Port := Port;
   TCPServer.Bindings.Add.IP := '127.0.0.1';
-  TCPServer.ListenQueue := 1;
-  TCPServer.MaxConnections := MaxClient;
+  TCPServer.ListenQueue := 0;
+  TCPServer.MaxConnections := MaxClient - 1;
   TCPServer.TerminateWaitTime := 10000;
   TCPServer.OnConnect := ServerConnect;
   TCPServer.OnExecute := ServerExecute;
@@ -89,22 +87,25 @@ begin
   TCPServer.OnException := ServerException;
   TCPServer.Active := True;
 
-  CS := TCriticalSection.Create;
-  CS1 := TCriticalSection.Create;
-  ÑonnectCS := TCriticalSection.Create;
+  ConnectCS := TCriticalSection.Create;
+  DisconnectCS := TCriticalSection.Create;
   SetBlockCS := TCriticalSection.Create;
   SetPositionCS := TCriticalSection.Create;
   OnMessageCS := TCriticalSection.Create;
+
+  DictionaryCS := TCriticalSection.Create;
+  UUIDCS := TCriticalSection.Create;
+
 end;
 
 destructor Srv.OnClose;
 begin
-  // CS.Free;
-  // CS1.Free;
-  ÑonnectCS.Free;
+
+  ConnectCS.Free;
   SetBlockCS.Free;
   SetPositionCS.Free;
   OnMessageCS.Free;
+
   TCPServer.Active := False;
 end;
 

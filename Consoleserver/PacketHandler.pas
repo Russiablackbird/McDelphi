@@ -3,13 +3,10 @@ unit PacketHandler;
 interface
 
 uses
-  System.SysUtils,
   System.SyncObjs,
-  System.Threading,
-  IdTCPServer,
   IdContext,
-  IdGlobal,
-  PlayerHandler;
+  PlayerHandler,
+  Config;
 
 type
   PacketManager = class(TObject)
@@ -23,38 +20,33 @@ implementation
 uses
   Server,
   Packet_0,
-  Packet_1,
-  Packet_2,
-  Packet_3,
-  Packet_4,
   Packet_5,
-  Packet_6,
-  Packet_7,
   Packet_8,
-  Packet_12,
-  Packet_13,
-  Packet_14;
-
-threadvar CommandID: Byte;
-
-var
-  Task: ITask;
+  Packet_13;
 
 class procedure PacketManager.PacketInput(AContext: TIdContext);
 var
-  Player: PlayerStruct;
 
+  CommandID: Byte;
 begin
   CommandID := AContext.Connection.IOHandler.ReadByte;
 
   if CommandID = 0 then
   begin
-
-    try
-      ÑonnectCS.Enter;
-      Packet0.Read(AContext); // Player identification
-    finally
-      ÑonnectCS.Leave;
+    if PlayersStack.Count = Cgf.Max_Players then
+    begin
+      AContext.Connection.Disconnect;
+    end
+    else
+    begin
+      try
+        ConnectCS.Enter;
+        PlayersStack.lock;
+        Packet0.Read(AContext); // Player identification
+      finally
+        PlayersStack.Unlock;
+        ConnectCS.Leave;
+      end;
     end;
 
   end
@@ -62,22 +54,26 @@ begin
   begin
     with AContext.Connection do
     begin
-
-      // for Player in PlayersStack.Values do
-      // begin
-      // if Player.Con = AContext then
-      // begin
       case CommandID of
         5:
           begin
-            Packet5.Read(AContext); // Set block
+            try
+              SetBlockCS.Enter;
+              PlayersStack.lock;
+              Packet5.Read(AContext); // Set block
+            finally
+              PlayersStack.Unlock;
+              SetBlockCS.Leave;
+            end;
           end;
         8:
           begin
             try
               SetPositionCS.Enter;
+              PlayersStack.lock;
               Packet8.Read(AContext); // Position and orientation
             finally
+              PlayersStack.Unlock;
               SetPositionCS.Leave;
             end;
           end;
@@ -85,26 +81,19 @@ begin
           begin
             try
               OnMessageCS.Enter;
+              PlayersStack.lock;
               Packet13.Read(AContext); // read message
             finally
+              PlayersStack.Unlock;
               OnMessageCS.Leave;
             end;
 
           end;
       else
         begin
-          try
-            CS1.Enter;
-            AContext.Connection.Disconnect;
-          finally
-            CS1.Leave;
-          end;
-
+          AContext.Connection.Disconnect;
         end;
       end;
-      Packet1.Write(AContext);
-      // end;
-      // end;
     end;
   end;
 end;

@@ -3,11 +3,8 @@ unit Packet_12;
 interface
 
 uses
-  System.SysUtils,
-  System.SyncObjs,
-  IdTCPServer,
-  IdContext,
-  IdGlobal;
+
+  IdContext;
 
 type
   Packet12 = class(TObject) // Despawn player

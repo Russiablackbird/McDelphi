@@ -37,7 +37,6 @@ begin
   if FileExists('maps/world.btm') then
   begin
     WorldMgr.Load;
-    // WorldMgr.Generate;
   end
   else
   begin
@@ -82,12 +81,10 @@ begin
   data[0] := (((MapSize) and (x * y * z)) shr 24);
   data[1] := (((MapSize) and (x * y * z)) shr 16);
   data[2] := (((MapSize) and (x * y * z)) shr 8);
-  data[3] := (((MapSize) and (0)));
-
+  data[3] := (((MapSize) and (x * y * z)) shr 0);
   Map.WriteData(data); // записать в поток
   Map.WriteData(MapArray, MapSize);
   Map.Position := 0;
-
   GZCompressStream(Map, ZipMap);
   SetLength(CompressMap, ZipMap.Size);
   ZipMap.Position := 0;
@@ -126,10 +123,13 @@ var
   x, y, z: Integer;
   grass: Word;
 begin
+  x := 0;
+  y := 0;
+  z := 0;
 
-  GLWorld.MapSize.x := 256;
-  GLWorld.MapSize.y := 256;
-  GLWorld.MapSize.z := 256;
+  GLWorld.MapSize.x := 100; // 256
+  GLWorld.MapSize.y := 100;
+  GLWorld.MapSize.z := 100;
   MapSize := GLWorld.MapSize.x * GLWorld.MapSize.y * GLWorld.MapSize.z;
   ZipMap := TMemoryStream.Create;
   seed := Noise._Noise.Create;
@@ -138,9 +138,6 @@ begin
     GLWorld.MapSize.z);
 
 {$REGION 'MAP'}
-  x := 0;
-  y := 0;
-  z := 0;
 
   while (x < GLWorld.MapSize.x) do
   begin
@@ -151,7 +148,7 @@ begin
       y := 0;
       while (y < GLWorld.MapSize.y) do
       begin
-        MapArray[Ext.Index(x, y, z, 256, 256)] := GetTile(x, y, z, grass);
+        MapArray[Ext.Index(x, y, z, 100, 100)] := GetTile(x, y, z, grass);
         Inc(y);
       end;
       Inc(z);

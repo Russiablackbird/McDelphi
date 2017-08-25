@@ -40,7 +40,7 @@ begin
     Argv := ('port=7777&') + ('max=' + IntToStr(Cgf.Max_Players) + '&') +
       ('name=' + Cgf.ServerName + '&') + ('public=True&') + ('version=7&') +
       ('salt=' + Cgf.ServerSalt + '&') + ('users=') +
-      IntToStr(PlayersStack.Count + 5);
+      IntToStr(PlayersStack.Count);
 
     HeartBeatHTTP.Get('http://www.classicube.net/heartbeat.jsp?' + Argv);
     Sleep(15000);

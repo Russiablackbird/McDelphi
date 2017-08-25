@@ -30,7 +30,8 @@ uses
   Packet_13 in 'Packets\Packet_13.pas',
   Packet_14 in 'Packets\Packet_14.pas',
   Noise in 'Utils\Noise.pas',
-  PluginManager in 'Utils\PluginManager.pas';
+  PluginManager in 'Utils\PluginManager.pas',
+  Rapid.Generics in 'Utils\Rapid.Generics.pas';
 
 var
   ServerTrigger: Boolean = True;

@@ -9,8 +9,6 @@ uses
   IdContext,
   IdGlobal,
   PlayerHandler,
-  System.Generics.Defaults,
-  System.Generics.Collections,
   Packet_14;
 
 type
@@ -39,8 +37,8 @@ begin
     UserName := IOHandler.ReadString(64, nil);
     VerKey := IOHandler.ReadString(64, nil);
     IOHandler.ReadByte;
-    PlayerManager.PlayerIdent(Vers, UserName, VerKey, AContext);
   end;
+  PlayerManager.PlayerIdent(Vers, UserName, VerKey, AContext);
 end;
 
 class procedure Packet0.Write(AContext: TIdContext; Vers: Byte;

@@ -3,11 +3,7 @@ unit Packet_5;
 interface
 
 uses
-  System.SysUtils,
-  System.SyncObjs,
-  IdTCPServer,
   IdContext,
-  IdGlobal,
   PlayerHandler,
   Extensions,
   World;
@@ -24,8 +20,6 @@ implementation
 uses
   Server;
 
-
-
 class procedure Packet5.Read(AContext: TIdContext);
 var
   X, Y, Z: SmallInt;
@@ -40,40 +34,29 @@ begin
     Mode := IOHandler.ReadByte;
     BId := IOHandler.ReadByte;
 
-    try
-      SetBlockCS.Enter;
+    if Mode = 0 then
+    begin
+      MapArray[Ext.Index(X, Y, Z, GLWorld.MapSize.X, GLWorld.MapSize.Z)] := 0;
+      Packet5.Write(AContext, X, Y, Z, 0);
+    end
+    else
+    begin
+      MapArray[Ext.Index(X, Y, Z, GLWorld.MapSize.X, GLWorld.MapSize.Z)] := BId;
+      Packet5.Write(AContext, X, Y, Z, BId);
+    end;
 
-      if Mode = 0 then
+    for Player in PlayersStack.Values do
+    begin
+      if Player.Con <> AContext then
       begin
-        MapArray[Ext.Index(X, Y, Z, GLWorld.MapSize.X, GLWorld.MapSize.Z)] := 0;
-        Packet5.Write(AContext, X, Y, Z, 0);
-      end
-      else
-      begin
-        MapArray[Ext.Index(X, Y, Z, GLWorld.MapSize.X,
-          GLWorld.MapSize.Z)] := BId;
-        Packet5.Write(AContext, X, Y, Z, BId);
-      end;
-
-      System.TMonitor.Enter(PlayersStack);
-      for Player in PlayersStack.Values do
-      begin
-        if Player.Con <> AContext then
+        if Mode = 0 then
         begin
-          if Mode = 0 then
-          begin
-            Packet5.Write(Player.Con, X, Y, Z, 0);
-          end
-          else
-          begin
-            Packet5.Write(Player.Con, X, Y, Z, BId);
-          end;
+          Packet5.Write(Player.Con, X, Y, Z, 0);
+        end
+        else
+        begin
+          Packet5.Write(Player.Con, X, Y, Z, BId);
         end;
-      end;
-      System.TMonitor.Exit(PlayersStack);
-    finally
-      begin
-        SetBlockCS.Leave;
       end;
     end;
 

@@ -3,12 +3,8 @@ unit Packet_2;
 interface
 
 uses
-  System.SysUtils,
-  System.SyncObjs,
-  IdTCPServer,
-  IdContext,
-  IdGlobal,
-  PlayerHandler;
+
+  IdContext;
 
 type
   Packet2 = class(TObject) // Level Initialize
@@ -17,9 +13,6 @@ type
   end;
 
 implementation
-
-uses
-  Server;
 
 class procedure Packet2.Write(AContext: TIdContext);
 begin

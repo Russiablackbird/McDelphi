@@ -6,26 +6,23 @@ uses
   System.SysUtils,
   System.SyncObjs,
   IdContext,
-  System.Generics.Defaults,
-  System.Generics.Collections,
+  Rapid.Generics,
   IdHashMessageDigest,
-  IdGlobal,
-  Config;
+  Config,
+  World;
 
 type
   PlayerStruct = record
     Con: TIdContext;
     UserName: String;
     VeryfyKey: String;
-    IP: String;
-    Port: Word;
-    X: SmallInt; // SHORT
-    Y: SmallInt; // SHORT
-    Z: SmallInt; // SHORT
+    X: SmallInt;
+    Y: SmallInt;
+    Z: SmallInt;
     Yaw: Byte;
     Pitch: Byte;
     Op: Byte;
-    PID: Byte; // Only Byte;
+    PID: Byte;
     Spawned: Boolean;
   end;
 
@@ -39,10 +36,21 @@ type
       AContext: TIdContext);
   end;
 
+type
+  TDictonaryHelper = class helper for TDictionary<TIdContext, PlayerStruct>
+    procedure Lock;
+    procedure Unlock;
+  end;
+
+type
+  TStackHelper = class helper for TStack<Byte>
+    procedure Lock;
+    procedure Unlock;
+  end;
+
 var
   PlayersStack: TDictionary<TIdContext, PlayerStruct>;
-  List: TThreadList<String>;
-  UUID: TStack<ShortInt>;
+  UUID: TStack<Byte>;
 
 implementation
 
@@ -61,6 +69,26 @@ Uses
   Packet_13, // Message
   Packet_14; // Kicked
 
+procedure TDictonaryHelper.Lock;
+begin
+  DictionaryCS.Enter;
+end;
+
+procedure TDictonaryHelper.Unlock;
+begin
+  DictionaryCS.Leave;
+end;
+
+procedure TStackHelper.Lock;
+begin
+  UUIDCS.Enter;
+end;
+
+procedure TStackHelper.Unlock;
+begin
+  UUIDCS.Leave;
+end;
+
 class procedure PlayerManager.Connect(AContext: TIdContext;
   SelfPlayer: PlayerStruct);
 var
@@ -74,7 +102,8 @@ begin
   with AContext.Connection do
   begin
     Packet4.Write(AContext);
-    PlayersStack.AddOrSetValue(AContext, SelfPlayer);
+
+    PlayersStack.Add(AContext, SelfPlayer);
 
 {$REGION 'Self Spawn'}
     Packet7.Write(AContext, 255, SelfPlayer.UserName, SelfPlayer.X,
@@ -85,7 +114,6 @@ begin
       ' &6joined the game';
     Msg := Msg + stringofchar(' ', 64 - length(Msg));
 {$ENDREGION}
-    System.TMonitor.Enter(PlayersStack);
     for Player in PlayersStack.Values do
     begin
       if Player.PID <> SelfPlayer.PID then
@@ -98,10 +126,9 @@ begin
         Packet13.Write(Player.Con, Msg);
       end;
     end;
-   System.TMonitor.Exit(PlayersStack);
-  end;
-  Writeln('Подключился: ' + PlayersStack.Items[AContext].UserName);
 
+  end;
+  Writeln('Connect: ' + PlayersStack.Items[AContext].UserName);
 end;
 
 class procedure PlayerManager.Disconnect(AContext: TIdContext);
@@ -110,37 +137,32 @@ var
   PID: Byte;
   Player: PlayerStruct;
 begin
-  System.TMonitor.Enter(PlayersStack);
+  try
+    PlayersStack.Lock;
+    PlayerName := PlayersStack.Items[AContext].UserName.Replace(' ', '');
+    PID := PlayersStack.Items[AContext].PID;
+    Writeln('Disconnect: ' + PlayerName);
 
-  PlayerName := PlayersStack.Items[AContext].UserName.Replace(' ', '');
-  PID := PlayersStack.Items[AContext].PID;
-  Writeln('Отключился: ' + PlayerName);
-  UUID.Push(PlayersStack.Items[AContext].PID);
-  PlayersStack.Remove(AContext);
+    PlayersStack.Remove(AContext);
+    Msg := '&4- &6' + PlayerName.Replace(' ', '') + ' &6left the game';
+    Msg := Msg + stringofchar(' ', 64 - length(Msg));
 
-  System.TMonitor.Exit(PlayersStack);
-{$REGION 'Message Disconnect'}
-  Msg := '&4- &6' + PlayerName.Replace(' ', '') + ' &6left the game';
-  Msg := Msg + stringofchar(' ', 64 - length(Msg));
+    for Player in PlayersStack.Values do
+    begin
+      Packet13.Write(Player.Con, Msg);
+      Packet12.Write(Player.Con, PID);
+    end;
 
- System.TMonitor.Enter(PlayersStack);
-  for Player in PlayersStack.Values do
-  begin
-    Packet13.Write(Player.Con, Msg);
+  finally
+
+    begin
+      UUID.Lock;
+      UUID.Push(PID);
+      UUID.Unlock;
+      PlayersStack.Unlock;
+    end;
+
   end;
- System.TMonitor.Exit(PlayersStack);
-
-{$ENDREGION}
-{$REGION 'Player despawn'}
-
-  System.TMonitor.Enter(PlayersStack);
-  for Player in PlayersStack.Values do
-  begin
-    Packet12.Write(Player.Con, PID);
-  end;
-  System.TMonitor.Exit(PlayersStack);
-
-{$ENDREGION}
 end;
 
 class procedure PlayerManager.PlayerIdent(Vers: Byte; UserName: String;
@@ -150,51 +172,48 @@ var
   MD5: string;
   Player: PlayerStruct;
 begin
+  MD5Mgr := TIdHashMessageDigest5.Create;
   try
     Player.UserName := UserName;
     Player.VeryfyKey := VerKey;
     Player.Con := AContext;
+    UUID.Lock;
     Player.PID := UUID.Pop;
+    UUID.Unlock;
     Player.X := 3000;
     Player.Y := 3000;
     Player.Z := 3000;
-    MD5Mgr := TIdHashMessageDigest5.Create;
     MD5 := MD5Mgr.HashStringAsHex(Cgf.ServerSalt + UserName.Replace(' ', ''));
-
     if LowerCase(MD5) = Player.VeryfyKey.Replace(' ', '') then
     begin
-      MD5Mgr.Free;
       PlayerManager.Connect(AContext, Player);
     end
     else
     begin
-      MD5Mgr.Free;
       PlayerManager.Connect(AContext, Player);
       // Packet14.Write(AContext, 'Bad connect session');
     end;
 
-  except
-    on E: Exception do
+  finally
     begin
       MD5Mgr.Free;
     end;
 
   end;
+
 end;
 
 class procedure PlayerManager.Init;
 var
-  i: ShortInt;
+  I: Byte;
 begin
-  List := TThreadList<String>.Create;
-  List.Add('fff');
-  List.Add('ff');
-
   PlayersStack := TDictionary<TIdContext, PlayerStruct>.Create;
-  UUID := TStack<ShortInt>.Create();
-  for i := 0 to 120 do
+  UUID := TStack<Byte>.Create;
+  for I := 0 to 110 do
   begin
-    UUID.Push(i);
+
+    UUID.Push(I);
+
   end;
 
 end;

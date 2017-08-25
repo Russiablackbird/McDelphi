@@ -6,9 +6,6 @@
         <Projects Include="ConsoleServer.dproj">
             <Dependencies/>
         </Projects>
-        <Projects Include="PluginsProject\PluginExample.dproj">
-            <Dependencies/>
-        </Projects>
     </ItemGroup>
     <ProjectExtensions>
         <Borland.Personality>Default.Personality.12</Borland.Personality>
@@ -26,23 +23,14 @@
     <Target Name="ConsoleServer:Make">
         <MSBuild Projects="ConsoleServer.dproj" Targets="Make"/>
     </Target>
-    <Target Name="PluginExample">
-        <MSBuild Projects="PluginsProject\PluginExample.dproj"/>
-    </Target>
-    <Target Name="PluginExample:Clean">
-        <MSBuild Projects="PluginsProject\PluginExample.dproj" Targets="Clean"/>
-    </Target>
-    <Target Name="PluginExample:Make">
-        <MSBuild Projects="PluginsProject\PluginExample.dproj" Targets="Make"/>
-    </Target>
     <Target Name="Build">
-        <CallTarget Targets="ConsoleServer;PluginExample"/>
+        <CallTarget Targets="ConsoleServer"/>
     </Target>
     <Target Name="Clean">
-        <CallTarget Targets="ConsoleServer:Clean;PluginExample:Clean"/>
+        <CallTarget Targets="ConsoleServer:Clean"/>
     </Target>
     <Target Name="Make">
-        <CallTarget Targets="ConsoleServer:Make;PluginExample:Make"/>
+        <CallTarget Targets="ConsoleServer:Make"/>
     </Target>
     <Import Project="$(BDS)\Bin\CodeGear.Group.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Group.Targets')"/>
 </Project>

@@ -3,11 +3,8 @@ unit Packet_1;
 interface
 
 uses
-  System.SysUtils,
-  System.SyncObjs,
-  IdTCPServer,
-  IdContext,
-  IdGlobal;
+
+  IdContext;
 
 type
   Packet1 = class(TObject) // ping
@@ -16,9 +13,6 @@ type
   end;
 
 implementation
-
-uses
-  Server;
 
 class procedure Packet1.Write(AContext: TIdContext);
 begin
